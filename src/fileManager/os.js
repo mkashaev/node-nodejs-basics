@@ -1,31 +1,15 @@
-// Get EOL (default system End-Of-Line) and print it to console
-import os from "node:os";
+import { EOL, cpus, homedir, userInfo, arch } from "node:os";
 
-export function eol() {
-  return os.EOL;
-}
+export default function os([arg]) {
+  const key = arg.replace("--", "");
 
-export function cpus() {
-  const cpus = os.cpus();
-  const cpuInfo = cpus.map((cpu) => ({
-    model: cpu.model,
-    speed: (cpu.speed / 1000).toFixed(2),
-  }));
+  const map = new Map([
+    ["EOL", JSON.stringify(EOL)],
+    ["cpus", cpus()],
+    ["homedir", homedir()],
+    ["username", userInfo().username],
+    ["architecture", arch()],
+  ]);
 
-  return {
-    totalCores: cpus.length,
-    cpuInfo,
-  };
-}
-
-export function homedir() {
-  return os.homedir();
-}
-
-export function username() {
-  return os.userInfo().username;
-}
-
-export function architecture() {
-  return os.arch();
+  console.log(map.get(key) || "Invalid argument");
 }

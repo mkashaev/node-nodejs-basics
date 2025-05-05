@@ -1,4 +1,4 @@
-function cd(targetPath) {
+function cd([targetPath]) {
   process.chdir(targetPath);
 }
 

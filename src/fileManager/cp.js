@@ -1,10 +1,15 @@
-export default function cp(filePath, newDirPath) {
-  const fileUrlPath = new URL(filePath, import.meta.url).pathname;
-  const newDirUrlPath = new URL(newDirPath, import.meta.url).pathname;
+import { resolve } from "node:path";
+import { createReadStream, createWriteStream } from "node:fs";
+
+export default function cp([filePath, newDirPath]) {
+  const fileLocation = resolve(process.cwd(), filePath);
+  const newDirLocation = resolve(process.cwd(), newDirPath);
+
+  console.log({ fileLocation, newDirLocation });
 
   return new Promise((resolve, reject) => {
-    const readStream = createReadStream(fileUrlPath);
-    const writeStream = createWriteStream(`${newDirUrlPath}/${filePath}`);
+    const readStream = createReadStream(fileLocation);
+    const writeStream = createWriteStream(`${newDirLocation}/${filePath}`);
 
     readStream
       .pipe(writeStream)

@@ -1,33 +1,23 @@
-async function ls() {
-  const targetDir = process.cwd(); // or set a specific directory
+import { readdir } from "node:fs/promises";
 
-  const entries = fs.readdirSync(targetDir, { withFileTypes: true });
+async function ls() {
+  const targetDir = process.cwd();
+
+  const entries = await readdir(targetDir, { withFileTypes: true });
 
   const result = entries.map((entry, index) => ({
-    index,
     Name: entry.name,
     Type: entry.isDirectory() ? "directory" : "file",
   }));
 
-  console.table(result);
+  result.sort((a, b) => {
+    if (a.Type !== b.Type) {
+      return a.Type === "directory" ? -1 : 1;
+    }
+    return a.Name.toLowerCase().localeCompare(b.Name.toLowerCase());
+  });
 
-  // try {
-  //   const dirPath = args[0] || process.cwd();
-  //   const files = await fs.readdir(dirPath);
-  //   console.log(`Contents of ${dirPath}:`);
-  //   for (const file of files) {
-  //     try {
-  //       const stats = await fs.stat(path.join(dirPath, file));
-  //       const type = stats.isDirectory() ? "dir" : "file";
-  //       const size = stats.size;
-  //       console.log(`${file} (${type}, ${size} bytes)`);
-  //     } catch (err) {
-  //       console.log(`${file} (error)`);
-  //     }
-  //   }
-  // } catch (err) {
-  //   console.log(`Error listing directory: ${err.message}`);
-  // }
+  console.table(result);
 }
 
 export default ls;

@@ -1,19 +1,26 @@
 import process from "node:process";
 import readline from "node:readline";
 
-import up from "./up";
-import cd from "./cd";
-import ls from "./ls";
-import cat from "./cat";
-import add from "./add";
-import mkdir from "./mkdir";
-import rn from "./rn";
-import cp from "./cp";
-import mv from "./mv";
-import rm from "./rm";
+import { cdHome, exitProgram, printCurrDir } from "./utils.js";
+
+import up from "./up.js";
+import cd from "./cd.js";
+import ls from "./ls.js";
+import cat from "./cat.js";
+import add from "./add.js";
+import mkdir from "./mkdir.js";
+import rn from "./rn.js";
+import cp from "./cp.js";
+import mv from "./mv.js";
+import rm from "./rm.js";
+import os from "./os.js";
+import calcHash from "./hash.js";
+import compress from "./compress.js";
+import decompress from "./decompress.js";
 
 const args = process.argv.slice(2);
 const parsedArgs = {};
+
 args.forEach((arg) => {
   const [key, value] = arg.split("=");
   parsedArgs[key.replace("--", "")] = value;
@@ -27,8 +34,6 @@ const rl = readline.createInterface({
   prompt: "$ ",
 });
 
-rl.prompt();
-
 const commandsMap = new Map([
   ["up", up],
   ["cd", cd],
@@ -40,82 +45,47 @@ const commandsMap = new Map([
   ["cp", cp],
   ["mv", mv],
   ["rm", rm],
+  ["os", os],
+  ["hash", calcHash],
+  ["compress", compress],
+  ["decompress", decompress],
 ]);
 
-const commands = {
-  // OS
-  os: {
-    EOL,
-    cpus,
-    homedir,
-    username,
-    architecture,
-  },
-
-  hash: true,
-  compress: true,
-  decompress: true,
-};
+cdHome();
+printCurrDir();
+rl.prompt();
 
 rl.on("line", async (line) => {
   const [command, ...args] = line.trim().split(" ");
 
-  try {
-    switch (command.toLowerCase()) {
-      case "cwd":
-        console.log(`Current directory: ${process.cwd()}`);
-        break;
+  const key = command.toLowerCase();
 
-      case "cat":
-        if (args.length === 0) {
-          console.log("Error: Please provide a filename");
-          break;
-        }
-        try {
-          const filePath = path.resolve(process.cwd(), args[0]);
-          const content = await fs.readFile(filePath, "utf8");
-          console.log(content);
-        } catch (err) {
-          console.log(`Error reading file: ${err.message}`);
-        }
-        break;
-    }
-  } catch (err) {
-    console.log(`Error listing directory: ${err.message}`);
+  if (key === ".exit") {
+    exitProgram(parsedArgs?.username);
+    rl.prompt();
+    return;
   }
 
-  console.log(`Command: ${command}`);
-  console.log(`Arguments: ${args.join(" ")}`);
+  const func = commandsMap.get(key);
+
+  if (!func) {
+    console.log(`Invalid input: ${command}`);
+    rl.prompt();
+    return;
+  }
+
+  try {
+    await func(args);
+  } catch (error) {
+    console.log(`Operation failed: ${error.message}`);
+  }
+
+  printCurrDir();
+  rl.prompt();
 }).on("close", () => {
-  process.exit(0);
+  exitProgram(parsedArgs?.username);
 });
 
-// function fileManager() {
-//   // parse args varialbes -- --username=your_username
-//   const args = process.argv.slice(2);
-//   const parsedArgs = {};
-//   args.forEach((arg) => {
-//     const [key, value] = arg.split("=");
-//     parsedArgs[key.replace("--", "")] = value;
-//   });
-
-//   console.log(`Welcome to the File Manager, ${parsedArgs.username}!`);
-
-//   // Starting working directory is current user's home directory (for example, on Windows it's something like system_drive/Users/Username)
-//   const homeDir = process.env.HOME || process.env.USERPROFILE;
-//   const currentDir = process.cwd();
-//   console.log(`You are currently in ${currentDir}`);
-//   console.log(`Your home directory is ${homeDir}`);
-
-//   // using node api switch to home directory
-//   process.chdir(homeDir);
-// }
-
-// fileManager();
-
 process.on("SIGINT", () => {
-  console.log(
-    `\nThank you for using File Manager, ${parsedArgs?.username}, goodbye!`
-  );
-  process.exit(0);
+  exitProgram(parsedArgs?.username);
 });
