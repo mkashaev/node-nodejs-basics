@@ -15,8 +15,13 @@ const read = async () => {
 
   const stream = createReadStream(filePath, { encoding: "utf-8" });
 
-  stream.on("data", (chunk) => {
-    stdout.write(chunk + "\n");
+  // stream.on("data", (chunk) => {
+  //   stdout.write(chunk + "\n");
+  // });
+
+  stream.pipe(stdout);
+  stream.on("end", function () {
+    stdout.write("\n");
   });
 };
 
